@@ -36,6 +36,7 @@ namespace StatLight.Core.WebServer.XapHost
             XapHostFileLoaders.Add(XapHostType.MSTest2010MayPhone, new DiskXapHostFileLoader(_logger, xapDirectory, ClientXapNameFormat.FormatWith(XapHostType.MSTest2010MayPhone)));
             XapHostFileLoaders.Add(XapHostType.UnitDriven2009December, new DiskXapHostFileLoader(_logger, xapDirectory, ClientXapNameFormat.FormatWith(XapHostType.UnitDriven2009December)));
             XapHostFileLoaders.Add(XapHostType.XunitContrib2011April, new DiskXapHostFileLoader(_logger, xapDirectory, ClientXapNameFormat.FormatWith(XapHostType.XunitContrib2011April)));
+            XapHostFileLoaders.Add(XapHostType.XunitContrib2011AprilPhone, new DiskXapHostFileLoader(_logger, xapDirectory, ClientXapNameFormat.FormatWith(XapHostType.XunitContrib2011AprilPhone)));
         }
 
         public virtual byte[] LoadXapHostFor(XapHostType version)
@@ -64,6 +65,9 @@ namespace StatLight.Core.WebServer.XapHost
                         throwNotSupportedException();
                         break;
 
+                    case UnitTestProviderType.XUnit:
+                        return XapHostType.XunitContrib2011AprilPhone;
+                    
                     case UnitTestProviderType.MSTestWithCustomProvider:
                         throw new NotSupportedException("Could possibly be supported - but just not done yet");
 

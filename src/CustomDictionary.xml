@@ -7,6 +7,10 @@
             <Word>Fav</Word>
             <Word>Contrib</Word>
             <Word>Xunit</Word>
+            <Word>ioc</Word>
+            <Word>std</Word>
+            <Word>api</Word>
+            <Word>dir</Word>
         </Recognized>
     </Words>
 </Dictionary>

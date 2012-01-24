@@ -20,7 +20,8 @@
         MSTest2010MayPhone,
 
         UnitDriven2009December,
-        XunitContrib2011April
+        XunitContrib2011April,
+        XunitContrib2011AprilPhone
     }
 
     public enum MicrosoftTestingFrameworkVersion

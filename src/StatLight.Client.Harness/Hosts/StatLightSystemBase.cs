@@ -11,6 +11,8 @@ using StatLight.Core.WebServer;
 
 namespace StatLight.Client.Harness.Hosts
 {
+    using Extensions = StatLight.Core.Serialization.Extensions;
+
     public abstract class StatLightSystemBase
     {
         protected bool TestRunConfigurationDownloadComplete;
@@ -24,17 +26,17 @@ namespace StatLight.Client.Harness.Hosts
             T service = null;
             try
             {
-
-                Assembly[] list;
 #if WINDOWS_PHONE
-                if (typeof(T) == typeof(ITestRunnerHost))
-                    return (new StatLight.Client.Harness.Hosts.MSTest.MSTestRunnerHost() as T);
-                throw new NotSupportedException("type({0}) is not supported.".FormatWith(typeof(T).FullName));
+                var list = Deployment.Current.Parts
+                                     .Where(w => w.Source.Contains("StatLight", StringComparison.OrdinalIgnoreCase))
+                                     .Select(ap => Assembly.Load(ap.Source.Replace(".dll", string.Empty)));
+
 #else
-                list = Deployment.Current.Parts
+                var list = Deployment.Current.Parts
                                     .Where(w => w.Source.Contains("StatLight", StringComparison.OrdinalIgnoreCase))
                                     .Select(ap => System.Windows.Application.GetResourceStream(new Uri(ap.Source, UriKind.Relative)))
                                     .Select(stream => new System.Windows.AssemblyPart().Load(stream.Stream)).ToArray();
+#endif
                 var type = list
                     .SelectMany(s => s.GetTypes())
                     .Where(w => w != typeof(T))
@@ -55,7 +57,6 @@ namespace StatLight.Client.Harness.Hosts
                             string.Join("   - " + Environment.NewLine, list.Select(s => s.FullName).ToArray())));
                 }
                 service = (T)Activator.CreateInstance(type.Single());
-#endif
             }
             catch (ReflectionTypeLoadException rfex)
             {

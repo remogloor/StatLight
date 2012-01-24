@@ -670,8 +670,6 @@ Task compile-Solution-Phone {
 	$solutionFolder = (split-path (get-item $solutionFilePhone))
 	
 	exec { . $msbuild $solutionFilePhone /t:Rebuild /p:Configuration=$build_configuration /p:Platform=x86 $verbosity /nologo /p:CompileTimeSolutionDir="$solutionFolder" } 'msbuild failed $solutionFilePhone'
-	
-	Copy-Item ".\src\StatLight.Client.Harness.Phone\Bin\$build_configuration\StatLight.Client.Harness.Phone.xap" "$build_dir\StatLight.Client.For.MSTestMay2010Phone.xap"
 }
 
 Task compile-StatLight-UnitDrivenHost {
@@ -747,9 +745,84 @@ Task compile-StatLight-XUnitContribHost {
 }
 
 Task compile-StatLight-XUnitContribHost-Phone {
-	throw "Not implemented"
+	$references = (ls .\src\StatLight.Client.Harness.XUnitPhone\Bin\$build_configuration\*.dll)
+	$png = (ls .\src\StatLight.Client.Harness.Phone\*.png)
+	$jpg = (ls .\src\StatLight.Client.Harness.Phone\*.jpg)
+	$manifest = (ls .\src\StatLight.Client.Harness.Phone\WMAppManifest.xml)
+	$referencedNames = ($references | foreach { $_.Name.TrimEnd(".dll") })
+	
+	$zippedName = "$build_dir\$statlight_xap_for_prefix.XUnitContrib2011AprilPhone.zip"
+
+	$appManifestContent = [string] '<Deployment xmlns="http://schemas.microsoft.com/client/2007/deployment" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" EntryPointAssembly="StatLight.Client.Harness.Phone" EntryPointType="StatLight.Client.Harness.Phone.App" RuntimeVersion="3.0.40624.0">
+		<Deployment.Parts>'
+	
+	$referencedNames | foreach { 
+		$ass = $_
+		$extraStuff = "
+			<AssemblyPart x:Name=""$ass"" Source=""$ass.dll"" />"
+		$appManifestContent += $extraStuff	
+	}
+
+	$appManifestContent += '	</Deployment.Parts>
+	</Deployment>'
+
+	$newAppManifestFile = "$(($pwd).Path)\src\build\AppManifest.xaml"
+	Remove-If-Exists $newAppManifestFile
+	([xml]$appManifestContent).Save($newAppManifestFile);
+
+	$zipFiles = $references
+	$zipFiles += $png
+	$zipFiles += $jpg
+	$zipFiles += $manifest
+	$zipFiles += @(
+					Get-Item $newAppManifestFile
+				)
+
+	Remove-If-Exists $zippedName
+	#throw 'a'
+	$zipFiles | Zip-Files-From-Pipeline $zippedName | Out-Null
+	#Create-Xap $zippedName $zipFiles
 }
 
+Task compile-StatLight-MSTest-Phone {
+	$references = (ls .\src\StatLight.Client.Harness.MSTestPhone\Bin\$build_configuration\*.dll)
+	$png = (ls .\src\StatLight.Client.Harness.Phone\*.png)
+	$jpg = (ls .\src\StatLight.Client.Harness.Phone\*.jpg)
+	$manifest = (ls .\src\StatLight.Client.Harness.Phone\WMAppManifest.xml)
+	$referencedNames = ($references | foreach { $_.Name.TrimEnd(".dll") })
+	
+	$zippedName = "$build_dir\$statlight_xap_for_prefix.MSTest2010MayPhone.zip"
+
+	$appManifestContent = [string] '<Deployment xmlns="http://schemas.microsoft.com/client/2007/deployment" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" EntryPointAssembly="StatLight.Client.Harness.Phone" EntryPointType="StatLight.Client.Harness.Phone.App" RuntimeVersion="3.0.40624.0">
+		<Deployment.Parts>'
+	
+	$referencedNames | foreach { 
+		$ass = $_
+		$extraStuff = "
+			<AssemblyPart x:Name=""$ass"" Source=""$ass.dll"" />"
+		$appManifestContent += $extraStuff	
+	}
+
+	$appManifestContent += '	</Deployment.Parts>
+	</Deployment>'
+
+	$newAppManifestFile = "$(($pwd).Path)\src\build\AppManifest.xaml"
+	Remove-If-Exists $newAppManifestFile
+	([xml]$appManifestContent).Save($newAppManifestFile);
+
+	$zipFiles = $references
+	$zipFiles += $png
+	$zipFiles += $jpg
+	$zipFiles += $manifest
+	$zipFiles += @(
+					Get-Item $newAppManifestFile
+				)
+
+	Remove-If-Exists $zippedName
+	#throw 'a'
+	$zipFiles | Zip-Files-From-Pipeline $zippedName | Out-Null
+	#Create-Xap $zippedName $zipFiles
+}
 #########################################
 #
 # Unit/Integration tests
@@ -1072,6 +1145,7 @@ Task package-release -depends clean-release {
 		$expectedFilesToInclude += @(
 			'StatLight.Client.For.MSTest2010MayPhone.xap'
 			'StatLight.WindowsPhoneEmulator.dll'
+			'StatLight.Client.For.XUnitContrib2011AprilPhone.xap'
 		)
 	}
 "****"
@@ -1230,6 +1304,8 @@ Task build-all-phone -depends `
 	initialize, `
 	create-AssemblyInfo, `
 	compile-Solution-Phone, `
+    compile-StatLight-MSTest-Phone, `
+    compile-StatLight-XUnitContribHost-Phone, `
 	compile-StatLight-MSTestHostVersions, `
 	compile-StatLight-UnitDrivenHost, `
 	compile-StatLight-XUnitContribHost, `
